@@ -1,6 +1,4 @@
-import { operateEngine, validateParameter } from "~/server/utils/apiUtilities";
-import { onRedis } from "~/server/utils/redis";
-import { writeLog } from "~/server/utils/writeLog";
+import { operateEngine, validateParameter } from "~/src/apiUtilities";
 const lvA = Number(process.env.A_LV);
 const lvB = Number(process.env.B_LV);
 const lvT = lvA + lvB;

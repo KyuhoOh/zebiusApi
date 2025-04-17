@@ -1,5 +1,3 @@
-import { onRedis } from "./redis";
-import { onDB } from "./mongo";
 import { getFormattedDate } from "./apiUtilities";
 
 const writeLogDB = async (db, redis, collectionName, ref) => {
@@ -45,9 +43,9 @@ const writeLogDB = async (db, redis, collectionName, ref) => {
   }
 };
 
-export const writeLog = async (result, isCancel, isReal = true) => {
+export const writeLog = async (result,fastify, isCancel) => {
   const data = { ...result };
-  const redis = onRedis(isReal);
+  const redis = fastify.redis;
   try {
     const db = await onDB(isReal);
     const today = getFormattedDate();

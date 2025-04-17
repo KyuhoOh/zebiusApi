@@ -1,6 +1,4 @@
-import { onRedis } from "~/server/utils/redis";
-import { writeLog } from "~/server/utils/writeLog";
-import { validateParameterX } from "~/server/utils/apiUtilities";
+import { validateParameterX } from "~/src/apiUtilities";
 
 export default defineEventHandler(async (event) => {
   const redis = onRedis(false);

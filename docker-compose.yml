@@ -1,22 +1,31 @@
-version: "3.8"
+version: '3.8'
+
 services:
-  app:
+  # Fastify 서버 서비스
+  api:
     build: .
+    container_name: fastify-api
     ports:
-      - "3001:3001"
-    env_file:
-      - .env
+      - "3000:3000"  # Fastify 서버를 3000 포트에서 노출
     depends_on:
       - redis
-      - mongo
+      - mongo  # Redis와 MongoDB가 먼저 실행될 수 있도록 설정
 
+  # Redis 서비스
   redis:
-    image: redis:7
+    image: redis:latest
+    container_name: redis
+    ports:
+      - "6379:6379"  # Redis의 기본 포트 6379
 
+  # MongoDB 서비스
   mongo:
-    image: mongo:6
+    image: mongo:latest
+    container_name: mongo
+    ports:
+      - "27017:27017"  # MongoDB의 기본 포트 27017
     volumes:
-      - mongo-data:/data/db
+      - mongo-data:/data/db  # MongoDB 데이터를 지속적으로 저장할 volume 설정
 
 volumes:
   mongo-data:

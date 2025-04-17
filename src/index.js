@@ -1,16 +1,36 @@
-import Fastify from "fastify";
-import dotenv from "dotenv";
-import counterRoute from "./routes/counter.js";
+import Fastify from 'fastify';
+import fastifyRedis from 'fastify-redis';
+import fastifyMongo from 'fastify-mongodb';
 
-dotenv.config();
+const fastify = Fastify({
+  logger: true
+});
 
-const fastify = Fastify({ logger: true });
+// Redis 설정
+fastify.register(fastifyRedis, {
+  host: 'redis', // Docker Compose에서 지정한 Redis 서비스 이름
+  port: 6379
+});
 
-fastify.register(counterRoute);
+// MongoDB 설정
+fastify.register(fastifyMongo, {
+  url: 'mongodb://mongo:27017/zebius', // Docker Compose에서 지정한 MongoDB 서비스 이름
+});
 
-fastify.listen({ port: process.env.PORT, host: "0.0.0.0" }, (err) => {
-  if (err) {
+// API 엔드포인트 예시
+fastify.post('/', async (request, reply) => {
+  return { data: 'hello! this is zebiusApiServer' };
+});
+
+// 서버 시작
+const start = async () => {
+  try {
+    await fastify.listen(3000);
+    console.log('Fastify server running on http://localhost:3000');
+  } catch (err) {
     fastify.log.error(err);
     process.exit(1);
   }
-});
+};
+
+start();
