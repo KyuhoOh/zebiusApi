@@ -1,5 +1,5 @@
 export default async function (fastify, opts) {
-  fastify.post("/admin", async (request, reply) => {
+  fastify.post("/status", async (request, reply) => {
     const redis = fastify.redis;
     const db = fastify.mongo;
     try {

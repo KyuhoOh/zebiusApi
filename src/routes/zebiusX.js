@@ -1,4 +1,4 @@
-import { validateParameterX } from "../validation.js";
+import { validateParameterX } from "../utils/validation.js";
 
 export default async function (fastify, opts) {
   fastify.post("/zebius.cancel", async (request, reply) => {

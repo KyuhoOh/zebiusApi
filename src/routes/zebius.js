@@ -1,7 +1,7 @@
 // src/routes/zebius.test.js
-import { validateParameter } from "../validation.js";
-import { operateEngine } from "../zebiusEngine.js";
-import { writeLog } from "../writeLog.js";
+import { validateParameter } from "../utils/validation.js";
+import { operateEngine } from "../utils/zebiusEngine.js";
+import { writeLog } from "../utils/writeLog.js";
 
 const lvA = Number(process.env.A_LV);
 const lvB = Number(process.env.B_LV);
