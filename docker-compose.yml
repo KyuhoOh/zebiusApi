@@ -1,7 +1,8 @@
 services:
   app:
+    image: zebius-api
     build: .
-    container_name: zebius-app
+    container_name: zebius-api
     ports:
       - "${PORT:-3000}:3000"
     depends_on:
