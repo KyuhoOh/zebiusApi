@@ -1,10 +1,12 @@
 // index.js
+import os from "os";
+import axios from "axios";
 import Fastify from "fastify";
 import fastifyRedis from "fastify-redis";
 import fastifyMongo from "fastify-mongodb";
 import zebius from "./routes/zebius.js";
 import zebiusX from "./routes/zebiusX.js";
-import status from "./routes/admin.js";
+import status from "./routes/status.js";
 
 const fastify = Fastify({
   logger: true,
@@ -51,8 +53,8 @@ const start = async () => {
       on: true,
       time: new Date().toISOString(),
     };
-    const webServerIP = `${process.env.WEB_IP}:3000/admin/server`;
-    await axios.default.post(webServerIP, serverInfo);
+    const webServerIP = `http://${process.env.WEB_IP}:3000/admin/server`;
+    await axios.post(webServerIP, serverInfo);
     console.log("Fastify server running on http://localhost:3000");
   } catch (err) {
     fastify.log.error(err);
