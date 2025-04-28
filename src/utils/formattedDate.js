@@ -8,5 +8,8 @@ export const getFormattedDate = () => {
   minutes = Math.floor(minutes / 10) * 10;
   minutes = minutes.toString().padStart(2, "0");
 
-  return { YY: year, MM: month, DD: day, hh: hours, mm: minutes };
+  const output = { YY: year, MM: month, DD: day, hh: hours, mm: minutes };
+  // console.log(output);
+  return output;
 };
+// getFormattedDate();

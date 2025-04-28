@@ -4,13 +4,22 @@ export default async function (fastify, opts) {
   fastify.post("/zebius.cancel", async (request, reply) => {
     try {
       const { k, c, r, xR, xT, t, p, z } = request.body;
-      const validationResult = validateParameterX(k, c, r, xR, xT, t, false);
+      const validationResult = validateParameterX(
+        k,
+        c,
+        r,
+        xR,
+        xT,
+        t,
+        process.env.SUFFIX == "test" ? false : true
+      );
 
       if (validationResult) {
-        return reply.send(validationResult);
+        return reply.code(400).send(validationResult);
       }
 
       const data = {
+        s: 2,
         t,
         c,
         r,
@@ -22,14 +31,13 @@ export default async function (fastify, opts) {
 
       setImmediate(async () => {
         try {
-          await writeLog(data, true, fastify);
+          writeLog(data, true, fastify);
         } catch (e) {
           request.log.error("Logging failed:", e);
         }
       });
 
       return reply.send({
-        status: 200,
         data,
       });
     } catch (error) {

@@ -1,29 +1,42 @@
 import { getFormattedDate } from "./formattedDate.js";
 
+const collectionCache = new Map();
+
+function getCollection(db, name) {
+  if (!collectionCache.has(name)) {
+    collectionCache.set(name, db.collection(name));
+  }
+  return collectionCache.get(name);
+}
+
 export const writeLog = async (result, isCancel, fastify) => {
-  const data = { ...result };
   const db = fastify.mongo.db;
   const { YY, MM, DD, hh, mm } = getFormattedDate();
 
   try {
     const dateKey = `${YY}${MM}${DD}${hh}${mm}`;
-    const collectionName = `${isCancel ? "xog" : "log"}_${data.c}_${dateKey}`;
+    const collectionName = `${isCancel ? "xog" : "log"}_${result.c}_${dateKey}`;
 
-    const p = data.p;
-    const z = data.z;
+    const p = result.p;
+    const z = result.z;
     const incP = isCancel ? -p : p;
     const incZ = isCancel ? -z : z;
 
-    await db.collection(collectionName).insertOne(data);
-    await db.collection("MonthlyData").updateOne(
-      { c: data.c },
-      {
-        $inc: { p: incP, z: incZ, n: 1 },
-        $setOnInsert: { c: data.c, p: 0, z: 0, n: 1 },
-      },
-      { upsert: true }
-    );
+    const logCollection = getCollection(db, collectionName);
+    const monthlyCollection = getCollection(db, "MonthlyData");
+
+    await Promise.all([
+      logCollection.insertOne(result),
+      monthlyCollection.updateOne(
+        { c: result.c },
+        {
+          $inc: { p: incP, z: incZ, n: 1 },
+          $setOnInsert: { c: result.c },
+        },
+        { upsert: true }
+      ),
+    ]);
   } catch (err) {
-    console.error(err);
+    console.error("writeLog Error:", err);
   }
 };

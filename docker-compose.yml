@@ -1,36 +1,43 @@
 services:
-  app:
+  api:
     image: zebius-api
-    build: .
-    container_name: zebius-api
-    ports:
-      - "${PORT:-3000}:3000"
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: zebius-api-${SUFFIX}
+    network_mode: host
+    env_file:
+      - .env
     depends_on:
       - mongo
       - redis
-    env_file:
-      - .env
     volumes:
       - .:/app
-    restart: always
+    restart: unless-stopped
 
   mongo:
-    image: mongo
+    image: mongo:latest
     container_name: zebius-mongo
-    ports:
-      - "27017:27017"
+    network_mode: host
+    command: ["mongod", "--config", "/etc/mongod.conf"]
     volumes:
       - mongo-data:/data/db
-    restart: always
+      - ./mongod.conf:/etc/mongod.conf
+    restart: unless-stopped
 
   redis:
-    image: redis
+    image: redis:latest
     container_name: zebius-redis
+    network_mode: host
+    command: ["redis-server", "/usr/local/etc/redis/redis.conf"]
     volumes:
       - redis-data:/data
-    ports:
-      - "6379:6379"
-    restart: always
+      - ./redis.conf:/usr/local/etc/redis/redis.conf
+    ulimits:
+      nofile:
+        soft: 65535
+        hard: 65535
+    restart: unless-stopped
 
 volumes:
   mongo-data:

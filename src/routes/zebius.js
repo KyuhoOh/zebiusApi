@@ -1,4 +1,3 @@
-// src/routes/zebius.test.js
 import { validateParameter } from "../utils/validation.js";
 import { operateEngine } from "../utils/zebiusEngine.js";
 import { writeLog } from "../utils/writeLog.js";
@@ -12,29 +11,35 @@ const ratio = Math.floor(TLens / ALens);
 
 export default async function (fastify, opts) {
   fastify.post("/zebius", async (request, reply) => {
-    const startWatch = Number(process.hrtime.bigint()) / 1000;
+    const getMicroTime = () => Number(process.hrtime.bigint()) / 1000;
+    const t0 = getMicroTime();
+
     const redis = fastify.redis;
 
     try {
+      const t1 = getMicroTime();
       const { k, c, r, t, p } = request.body;
-      const validationResult = validateParameter(k, c, r, t, p, false);
+
+      const t2 = getMicroTime();
+      const validationResult = validateParameter(
+        k,
+        c,
+        r,
+        t,
+        p,
+        process.env.SUFFIX == "test" ? false : true
+      );
+      const t3 = getMicroTime();
 
       if (validationResult) {
         return reply.code(400).send(validationResult);
       }
 
-      const lua = `
-        local current = redis.call("INCRBY", KEYS[1], ARGV[1])
-        local max = tonumber(ARGV[2])
-        local cycled = ((current-1) % max)+1
-        if cycled == 0 then
-          redis.call("INCR", "cycle")
-        end
-        redis.call("SET", KEYS[1], cycled)
-        return cycled
-      `;
+      const t4 = getMicroTime();
+      const zev = await redis.incrby("zev", p);
+      const t5 = getMicroTime();
 
-      const newZev = await redis.eval(lua, 1, "zev", p, TLens);
+      const newZev = ((zev - 1) % TLens) + 1;
       const oldZev = (newZev - p + TLens) % TLens;
       const a = Math.floor(newZev / ratio);
       const xa = Math.floor(oldZev / ratio);
@@ -42,21 +47,37 @@ export default async function (fastify, opts) {
       const A = oldZev < newZev ? a - xa : a + ALens - xa;
       const B = p - A;
       const z = operateEngine(A, B, a, b);
+      const t6 = getMicroTime();
+
       const data = { t, c, r, p, z, A, B, a, b };
 
-      const endWatch = Number(process.hrtime.bigint()) / 1000;
-      console.log(`Elapsed Time : ${(endWatch - startWatch).toFixed(0)}μs`);
-
+      const t7 = getMicroTime();
       setImmediate(async () => {
-        await writeLog(data, false, fastify);
+        const t8 = getMicroTime();
+        writeLog(data, false, fastify);
+        const t9 = getMicroTime();
+        console.log(
+          "Log Write Time (setImmediate):",
+          (t9 - t8).toFixed(0),
+          "μs"
+        );
       });
 
+      const t10 = getMicroTime();
+
+      console.log("---- Timing Breakdown ----");
+      console.log("Total Elapsed Time:", (t10 - t0).toFixed(0), "μs");
+      console.log("Request Parse Time:", (t2 - t1).toFixed(0), "μs");
+      console.log("Validation Time:", (t3 - t2).toFixed(0), "μs");
+      console.log("Redis Eval Time:", (t5 - t4).toFixed(0), "μs");
+      console.log("Engine Calculation Time:", (t6 - t5).toFixed(0), "μs");
+      console.log("SetImmediate Setup Time:", (t7 - t6).toFixed(0), "μs");
+
       return reply.send({
-        status: 200,
         data: { s: 1, t, c, r, p, z },
       });
     } catch (error) {
-      console.error(error);
+      console.error("Error:", error);
       return reply
         .code(500)
         .send({ status: "error", message: "Failed to calculate point" });

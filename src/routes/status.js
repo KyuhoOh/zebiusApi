@@ -6,15 +6,13 @@ export default async function (fastify, opts) {
       const { passKey, command, n } = request.body;
 
       if (!passKey || passKey !== process.env.AuthPass) {
-        return reply.send("You're not Allowed!");
+        return reply.code(401).send("You're not Allowed!");
       }
 
       switch (command) {
         case "status":
           const zev = await redis.get("zev");
-          const cycle = await redis.get("cycle");
           return reply.send({
-            status: 200,
             data: { zev, cycle },
           });
           break;
@@ -26,23 +24,17 @@ export default async function (fastify, opts) {
             .sort({ createdAt: -1 }) // 최신순 정렬
             .limit(n);
           return reply.send({
-            status: 200,
             data: { logData },
           });
           break;
         default:
           break;
       }
-
-      return reply.send({
-        status: 200,
-        data,
-      });
     } catch (error) {
       request.log.error(error);
       return reply.code(500).send({
         status: "error",
-        message: "Failed to calculate point",
+        message: "Failed to get status",
       });
     }
   });
