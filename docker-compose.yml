@@ -9,20 +9,9 @@ services:
     env_file:
       - .env
     depends_on:
-      - mongo
       - redis
     volumes:
       - .:/app
-    restart: unless-stopped
-
-  mongo:
-    image: mongo:latest
-    container_name: zebius-mongo
-    network_mode: host
-    command: ["mongod", "--config", "/etc/mongod.conf"]
-    volumes:
-      - mongo-data:/data/db
-      - ./mongod.conf:/etc/mongod.conf
     restart: unless-stopped
 
   redis:
@@ -39,6 +28,18 @@ services:
         hard: 65535
     restart: unless-stopped
 
+  flusher:
+    image: flusher
+    build:
+      context: ./flusher
+    container_name: flusher-${SUFFIX}
+    volumes:
+      - ./flusher/logs:/logs
+    env_file:
+      - .env
+    depends_on:
+      - redis
+    network_mode: host
+
 volumes:
-  mongo-data:
   redis-data:
