@@ -1,11 +1,14 @@
 import fastifyRedis from "@fastify/redis";
+import Redis from "ioredis";
 
 export async function redisOn(fastify) {
   try {
     await fastify.register(fastifyRedis, {
-      host: process.env.REDIS_HOST,
-      port: Number(process.env.REDIS_PORT),
-      closeClient: false,
+      client: new Redis({
+        host: process.env.REDIS_HOST,
+        port: Number(process.env.REDIS_PORT),
+      }),
+      closeClient: true,
     });
     fastify.log.info("Redis 연결됨");
   } catch (err) {

@@ -1,3 +1,4 @@
+# docker-compose.yml
 services:
   api:
     image: zebius-api
@@ -9,23 +10,32 @@ services:
     env_file:
       - .env
     depends_on:
-      - redis
+      - dragonfly
     volumes:
       - .:/app
     restart: unless-stopped
 
-  redis:
-    image: redis:latest
-    container_name: zebius-redis
-    network_mode: host
-    command: ["redis-server", "/usr/local/etc/redis/redis.conf"]
+  # 기존 redis 서비스 정의 부분 (↓ 이 부분을 **모두 삭제**하고 ↓)
+  # redis:
+  #   image: redis:latest
+  #   container_name: zebius-redis
+  #   network_mode: host # 또는 설정한 네트워크
+  #   command: ["redis-server", "/usr/local/etc/redis/redis.conf"] # 또는 다른 명령어
+  #   volumes:
+  #     - redis-data:/data
+  #     - ./redis.conf:/usr/local/etc/redis/redis.conf # 또는 다른 설정 파일
+  #   ulimits:
+  #     nofile:
+  #       soft: 65535
+  #       hard: 65535
+  #   restart: unless-stopped
+
+  dragonfly:
+    image: docker.dragonflydb.io/dragonflydb/dragonfly
+    container_name: dragonfly
     volumes:
-      - redis-data:/data
-      - ./redis.conf:/usr/local/etc/redis/redis.conf
-    ulimits:
-      nofile:
-        soft: 65535
-        hard: 65535
+      - dragonfly-data:/data
+    network_mode: host
     restart: unless-stopped
 
   flusher:
@@ -38,8 +48,8 @@ services:
     env_file:
       - .env
     depends_on:
-      - redis
+      - dragonfly
     network_mode: host
 
 volumes:
-  redis-data:
+  dragonfly-data:

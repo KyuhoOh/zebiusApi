@@ -1,10 +1,13 @@
+// src/index.js
 import Fastify from "fastify";
 import { redisOn } from "./plugins/redis.js";
 import { getInternalIP } from "./utils/network.js";
 import zebius from "./routes/zebius.js";
 import zebiusX from "./routes/zebiusX.js";
 import status from "./routes/status.js";
+import { validateParameter, validateParameterX } from "./utils/validation.js";
 global.zev = 0;
+global.logBuffer = [];
 
 async function registerMonitorServer(status) {
   const myIP = getInternalIP();
@@ -39,21 +42,44 @@ async function startServer() {
     connectionTimeout: 0,
   });
 
+  fastify.addHook("preHandler", (req, reply, done) => {
+    const now = Date.now();
+    const isReal = process.env.SUFFIX == "test" ? false : true;
+    const params = req.body;
+
+    if (req.url.includes("/api/zebiusX")) {
+      const validationResult = validateParameterX(params, isReal, now);
+
+      if (validationResult) {
+        return reply.code(validationResult.status).send(validationResult);
+      }
+    } else if (req.url.includes("/api/zebius")) {
+      const validationResult = validateParameter(params, isReal, now);
+
+      if (validationResult) {
+        return reply.code(validationResult.status).send(validationResult);
+      }
+    }
+    done();
+  });
+
   await redisOn(fastify);
 
-  const zevValue = await fastify.redis.get("zev");
-  global.zev = Number(zevValue) || 0;
+  const zev = await fastify.redis.get("zev");
+  global.zev = Number(zev) || 0;
 
   fastify.get("/", async () => {
     return { msg: "Welcome to Zebius API Server" };
   });
-  fastify.register(zebius, { prefix: "/api/v1" });
-  fastify.register(zebiusX, { prefix: "/api/v1" });
+  fastify.register(zebius, { prefix: "/api" });
+  fastify.register(zebiusX, { prefix: "/api" });
   fastify.register(status, { prefix: "/admin" });
 
   await fastify.listen({ port: process.env.APP_PORT, host: "localhost" });
 
-  console.log(`Fastify 서버 실행 중: http://localhost:${process.env.APP_PORT}`);
+  console.log(
+    `Fastify 서버 실행 중 / zev : ${global.zev} / redis.zev : ${zev}`
+  );
 
   await registerMonitorServer(true); // 서버 등록
 

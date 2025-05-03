@@ -2,6 +2,7 @@
     "name": "flusher",
     "version": "1.0.0",
     "main": "flusher.js",
+    "type": "module",
     "dependencies": {
         "fast-glob": "^3.3.1",
         "flusher": "file:",
