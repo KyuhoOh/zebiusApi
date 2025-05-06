@@ -4,7 +4,7 @@ import { redisOn } from "./plugins/redis.js";
 import { getInternalIP } from "./utils/network.js";
 import zebius from "./routes/zebius.js";
 import zebiusX from "./routes/zebiusX.js";
-import status from "./routes/status.js";
+import getStatus from "./routes/getStatus.js";
 import { validateParameter, validateParameterX } from "./utils/validation.js";
 global.zev = 0;
 global.logBuffer = [];
@@ -73,7 +73,7 @@ async function startServer() {
   });
   fastify.register(zebius, { prefix: "/api" });
   fastify.register(zebiusX, { prefix: "/api" });
-  fastify.register(status, { prefix: "/admin" });
+  fastify.register(getStatus, { prefix: "/admin" });
 
   await fastify.listen({ port: process.env.APP_PORT, host: "localhost" });
 

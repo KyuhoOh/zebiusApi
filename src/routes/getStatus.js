@@ -15,7 +15,6 @@ export default async function (fastify, opts) {
           return reply.send({
             data: { zev, cycle },
           });
-          break;
         case "log":
           const logData = db.collection
             .find({
@@ -26,7 +25,6 @@ export default async function (fastify, opts) {
           return reply.send({
             data: { logData },
           });
-          break;
         default:
           break;
       }
